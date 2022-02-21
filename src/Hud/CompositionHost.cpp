@@ -66,6 +66,19 @@ namespace Hud
         root.RelativeSizeAdjustment({ 1.0f, 1.0f });
         root.Offset({ 124, 12, 0 });
         m_target.Root(root);
+
+        // TEST
+        if (m_target.Root())
+        {
+            auto visuals = m_target.Root().as<winrt::WUIC::ContainerVisual>().Children();
+
+            auto element = m_compositor.CreateSpriteVisual();
+            element.Brush(m_compositor.CreateColorBrush({ 128, 255, 0, 0 }));
+            element.Size({ 50, 50 });
+            element.Offset({ 16, 16, 0 });
+            visuals.InsertAtTop(element);
+        }
+        // /TEST
     }
 #pragma endregion Public
     
