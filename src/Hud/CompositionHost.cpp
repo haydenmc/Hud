@@ -64,24 +64,53 @@ namespace Hud
     {
         auto root{ m_compositor.CreateContainerVisual() };
         root.RelativeSizeAdjustment({ 1.0f, 1.0f });
-        root.Offset({ 124, 12, 0 });
+        root.Offset({ 0, 0, 0 });
         m_target.Root(root);
 
-        // TEST
+        // Create some test visuals
         if (m_target.Root())
         {
             auto visuals = m_target.Root().as<winrt::WUIC::ContainerVisual>().Children();
 
-            auto element = m_compositor.CreateSpriteVisual();
-            element.Brush(m_compositor.CreateColorBrush({ 128, 255, 0, 0 }));
-            element.Size({ 50, 50 });
-            element.Offset({ 16, 16, 0 });
-            visuals.InsertAtTop(element);
+            auto tl{ m_compositor.CreateSpriteVisual() };
+            tl.Brush(m_compositor.CreateColorBrush({ 128, 255, 0, 0 }));
+            tl.Size({ 50, 50 });
+            tl.AnchorPoint({ 0, 0 });
+            tl.RelativeOffsetAdjustment({ 0, 0, 0 });
+            visuals.InsertAtTop(tl);
+
+            auto tr{ m_compositor.CreateSpriteVisual() };
+            tr.Brush(m_compositor.CreateColorBrush({ 128, 0, 255, 0 }));
+            tr.Size({ 50, 50 });
+            tr.AnchorPoint({ 1, 0 });
+            tr.RelativeOffsetAdjustment({ 1, 0, 0 });
+            visuals.InsertAtTop(tr);
+
+            auto bl{ m_compositor.CreateSpriteVisual() };
+            bl.Brush(m_compositor.CreateColorBrush({ 128, 0, 0, 255 }));
+            bl.Size({ 50, 50 });
+            bl.AnchorPoint({ 0, 1 });
+            bl.RelativeOffsetAdjustment({ 0, 1, 0 });
+            visuals.InsertAtTop(bl);
+
+            auto br{ m_compositor.CreateSpriteVisual() };
+            br.Brush(m_compositor.CreateColorBrush({ 128, 128, 0, 128 }));
+            br.Size({ 50, 50 });
+            br.AnchorPoint({ 1, 1 });
+            br.RelativeOffsetAdjustment({ 1, 1, 0 });
+            visuals.InsertAtTop(br);
+
+            auto c{ m_compositor.CreateSpriteVisual() };
+            c.Brush(m_compositor.CreateColorBrush({ 128, 255, 255, 255 }));
+            c.Size({ 50, 50 });
+            c.AnchorPoint({ 0.5, 0.5 });
+            c.RelativeOffsetAdjustment({ 0.5, 0.5, 0 });
+            visuals.InsertAtTop(c);
         }
         // /TEST
     }
 #pragma endregion Public
-    
+
 #pragma region Private
 #pragma endregion Private
 }
