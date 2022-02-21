@@ -1,11 +1,16 @@
 #include "pch.h"
+
+#include "CompositionHost.h"
+
 #include <iostream>
+#include <memory>
 
 namespace
 {
     constexpr std::wstring_view c_windowTitle{ L"Hud" };
     constexpr std::wstring_view c_windowClass{ L"HudWindowClass" };
     HINSTANCE g_hInstance;
+    std::unique_ptr<Hud::CompositionHost> c_compositionHost{ nullptr };
 }
 
 // Forward declarations
@@ -37,7 +42,7 @@ int WINAPI wWinMain(
 // Initializes window and runs the message loop
 int Run(HINSTANCE hInstance)
 {
-    winrt::init_apartment(winrt::apartment_type::multi_threaded);
+    winrt::init_apartment(winrt::apartment_type::single_threaded);
 
     RegisterWindowClass(hInstance);
     InitializeWindow(hInstance);
@@ -96,6 +101,8 @@ void InitializeWindow(HINSTANCE hInstance)
 
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
+
+    c_compositionHost = std::make_unique<Hud::CompositionHost>(hWnd);
 }
 
 LRESULT CALLBACK WndProc(
