@@ -1,14 +1,18 @@
 #include "pch.h"
 #include <iostream>
 
-int Run(HINSTANCE /*hInstance*/)
+namespace
 {
-    winrt::init_apartment();
-
-    std::wcout << L"Hello world!" << std::endl;
-
-    return 0;
+    constexpr std::wstring_view c_windowTitle{ L"Hud" };
+    constexpr std::wstring_view c_windowClass{ L"HudWindowClass" };
+    HINSTANCE g_hInstance;
 }
+
+// Forward declarations
+int Run(HINSTANCE hInstance);
+ATOM RegisterWindowClass(HINSTANCE hInstance);
+void InitializeWindow(HINSTANCE hInstance);
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 // Console entrypoint
 int main(
@@ -28,4 +32,78 @@ int WINAPI wWinMain(
 )
 {
     return Run(hInstance);
+}
+
+// Initializes window and runs the message loop
+int Run(HINSTANCE hInstance)
+{
+    winrt::init_apartment(winrt::apartment_type::multi_threaded);
+
+    RegisterWindowClass(hInstance);
+    InitializeWindow(hInstance);
+
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return (int)msg.wParam;
+}
+
+ATOM RegisterWindowClass(HINSTANCE hInstance)
+{
+    WNDCLASSW windowClass
+    {
+        .style = CS_HREDRAW | CS_VREDRAW,
+        .lpfnWndProc = WndProc,
+        .cbClsExtra = 0,
+        .cbWndExtra = 0,
+        .hInstance = hInstance,
+        .hIcon = nullptr,
+        .hCursor = LoadCursorW(nullptr, IDC_ARROW),
+        .hbrBackground = nullptr,
+        .lpszMenuName = nullptr,
+        .lpszClassName = c_windowClass.data(),
+    };
+
+    return RegisterClass(&windowClass);
+}
+
+void InitializeWindow(HINSTANCE hInstance)
+{
+    g_hInstance = hInstance;
+
+    HWND hWnd = CreateWindowW(
+        c_windowClass.data(),
+        c_windowTitle.data(),
+        WS_POPUP,
+        0,
+        0,
+        400,
+        800,
+        nullptr,
+        nullptr,
+        hInstance,
+        nullptr
+    );
+
+    if (!hWnd)
+    {
+        throw std::runtime_error("Could not create window!");
+    }
+
+    ShowWindow(hWnd, SW_SHOW);
+    UpdateWindow(hWnd);
+}
+
+LRESULT CALLBACK WndProc(
+    HWND hWnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
