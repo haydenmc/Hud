@@ -6,13 +6,16 @@
 #include <windows.ui.composition.interop.h>
 
 #include <winrt/Microsoft.Graphics.Canvas.h>
+#include <winrt/Microsoft.Graphics.Canvas.Effects.h>
 #include <winrt/Microsoft.Graphics.Canvas.Text.h>
 #include <winrt/Microsoft.Graphics.Canvas.UI.Composition.h>
+#include <winrt/Windows.Graphics.Effects.h>
 #include <winrt/Windows.UI.Text.h>
 
 namespace winrt
 {
     namespace MGC = Microsoft::Graphics::Canvas;
+    namespace MGCE = Microsoft::Graphics::Canvas::Effects;
     namespace MGCUC = Microsoft::Graphics::Canvas::UI::Composition;
     namespace WGDX = Windows::Graphics::DirectX;
     namespace WS = Windows::System;
@@ -108,6 +111,30 @@ namespace Hud
             br.RelativeOffsetAdjustment({ 1, 1, 0 });
             visuals.InsertAtTop(br);
 
+            // Try to do some gaussian blur
+            winrt::MGCE::GaussianBlurEffect blurEffect{};
+            blurEffect.Name(L"Blur");
+            blurEffect.BlurAmount(5.0f);
+            blurEffect.BorderMode(winrt::MGCE::EffectBorderMode::Hard);
+            blurEffect.Optimization(winrt::MGCE::EffectOptimization::Quality);
+            blurEffect.Source(winrt::WUIC::CompositionEffectSourceParameter{ L"source" });
+            winrt::WUIC::CompositionEffectFactory blurEffectFactory{
+                m_compositor.CreateEffectFactory(blurEffect)
+            };
+            winrt::WUIC::CompositionEffectBrush blurBrush{
+                blurEffectFactory.CreateBrush()
+            };
+
+            auto backdropBrush{ m_compositor.CreateBackdropBrush() };
+            blurBrush.SetSourceParameter(L"source", backdropBrush);
+
+            auto blurVisual{ m_compositor.CreateSpriteVisual() };
+            blurVisual.Brush(blurBrush);
+            blurVisual.Size({ 500, 500 });
+            blurVisual.AnchorPoint({ 0.5, 0.5 });
+            blurVisual.RelativeOffsetAdjustment({ 0.5, 0.5, 0 });
+            visuals.InsertAtTop(blurVisual);
+
             // Try to render some text with win2d
             auto canvasDevice{ winrt::MGC::CanvasDevice::GetSharedDevice() };
             auto compositionGraphicsDevice{
@@ -123,6 +150,7 @@ namespace Hud
                     winrt::WGDX::DirectXAlphaMode::Premultiplied
                 )
             };
+
             auto win2dVisual{ m_compositor.CreateSpriteVisual() };
             win2dVisual.Brush(m_compositor.CreateSurfaceBrush(drawingSurface));
             win2dVisual.Size(drawingSurface.Size());
