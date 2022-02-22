@@ -5,8 +5,16 @@
 #include <DispatcherQueue.h>
 #include <windows.ui.composition.interop.h>
 
+#include <winrt/Microsoft.Graphics.Canvas.h>
+#include <winrt/Microsoft.Graphics.Canvas.Text.h>
+#include <winrt/Microsoft.Graphics.Canvas.UI.Composition.h>
+#include <winrt/Windows.UI.Text.h>
+
 namespace winrt
 {
+    namespace MGC = Microsoft::Graphics::Canvas;
+    namespace MGCUC = Microsoft::Graphics::Canvas::UI::Composition;
+    namespace WGDX = Windows::Graphics::DirectX;
     namespace WS = Windows::System;
     namespace WUIC = Windows::UI::Composition;
     namespace WUICD = Windows::UI::Composition::Desktop;
@@ -100,14 +108,49 @@ namespace Hud
             br.RelativeOffsetAdjustment({ 1, 1, 0 });
             visuals.InsertAtTop(br);
 
-            auto c{ m_compositor.CreateSpriteVisual() };
-            c.Brush(m_compositor.CreateColorBrush({ 128, 255, 255, 255 }));
-            c.Size({ 50, 50 });
-            c.AnchorPoint({ 0.5, 0.5 });
-            c.RelativeOffsetAdjustment({ 0.5, 0.5, 0 });
-            visuals.InsertAtTop(c);
+            // Try to render some text with win2d
+            auto canvasDevice{ winrt::MGC::CanvasDevice::GetSharedDevice() };
+            auto compositionGraphicsDevice{
+                winrt::MGCUC::CanvasComposition::CreateCompositionGraphicsDevice(
+                    m_compositor,
+                    canvasDevice
+                )
+            };
+            auto drawingSurface{
+                compositionGraphicsDevice.CreateDrawingSurface(
+                    { 512, 256 },
+                    winrt::WGDX::DirectXPixelFormat::B8G8R8A8UIntNormalized,
+                    winrt::WGDX::DirectXAlphaMode::Premultiplied
+                )
+            };
+            auto win2dVisual{ m_compositor.CreateSpriteVisual() };
+            win2dVisual.Brush(m_compositor.CreateSurfaceBrush(drawingSurface));
+            win2dVisual.Size(drawingSurface.Size());
+            win2dVisual.AnchorPoint({ 0.5, 0.5 });
+            win2dVisual.RelativeOffsetAdjustment({ 0.5, 0.5, 0 });
+            visuals.InsertAtTop(win2dVisual);
+
+            {
+                auto drawingSession{
+                    winrt::MGCUC::CanvasComposition::CreateDrawingSession(drawingSurface)
+                };
+                drawingSession.Clear(winrt::Windows::UI::Colors::Transparent());
+
+                winrt::MGC::Text::CanvasTextFormat textFormat{};
+                textFormat.FontFamily(L"Segoe UI");
+                textFormat.FontWeight(winrt::Windows::UI::Text::FontWeights::Black());
+                textFormat.FontSize(64);
+                textFormat.HorizontalAlignment(winrt::MGC::Text::CanvasHorizontalAlignment::Center);
+                textFormat.VerticalAlignment(winrt::MGC::Text::CanvasVerticalAlignment::Center);
+
+                drawingSession.DrawTextW(
+                    L"HELLO WORLD",
+                    { 256, 128 },
+                    { 128, 255, 255, 255 },
+                    textFormat
+                );
+            }
         }
-        // /TEST
     }
 #pragma endregion Public
 
